@@ -8,6 +8,7 @@
 
 // ---- CONSTANTES ----
 const CLAVE_STORAGE = 'ruleta_lista_elementos';
+const CLAVE_TEMA = 'ruleta_tema_oscuro';
 const COLORES_BASE = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
 const COLOR_TEXTO_OSCURO = '#2d2d2d';
 const COLOR_TEXTO_CLARO  = '#ffffff';
@@ -42,6 +43,36 @@ const numActivos         = document.getElementById('numActivos');
 const numOcultos         = document.getElementById('numOcultos');
 const btnIniciar         = document.getElementById('btnIniciar');
 const contenedorRuleta   = document.getElementById('contenedorRuleta');
+const btnTema            = document.getElementById('btnTema');
+const iconoTema          = document.getElementById('iconoTema');
+
+// ====================================================
+// TEMA OSCURO
+// ====================================================
+function aplicarTemaOscuro(activar) {
+    if (activar) {
+        document.body.classList.add('tema-oscuro');
+        iconoTema.textContent = '☀️';
+        btnTema.title = 'Alternar modo claro (Tecla T)';
+    } else {
+        document.body.classList.remove('tema-oscuro');
+        iconoTema.textContent = '🌙';
+        btnTema.title = 'Alternar modo oscuro (Tecla T)';
+    }
+    localStorage.setItem(CLAVE_TEMA, activar ? 'oscuro' : 'claro');
+}
+
+function alternarTema() {
+    const esOscuro = document.body.classList.contains('tema-oscuro');
+    aplicarTemaOscuro(!esOscuro);
+}
+
+function cargarTemaGuardado() {
+    const temaGuardado = localStorage.getItem(CLAVE_TEMA);
+    if (temaGuardado === 'oscuro') {
+        aplicarTemaOscuro(true);
+    }
+}
 
 // ====================================================
 // F2 / UTILIDADES DE COLOR
@@ -227,6 +258,10 @@ function actualizarDesdeTextarea() {
 // ====================================================
 function habilitarEdicion() {
     if (modoEdicion) return;
+    if (estaGirando) {
+        mostrarAlerta('Espera a que termine el giro para editar.');
+        return;
+    }
     modoEdicion = true;
     textareaElementos.removeAttribute('readonly');
     textareaElementos.style.cursor = 'text';
@@ -252,6 +287,10 @@ function deshabilitarEdicion() {
 // ====================================================
 function iniciarGiro() {
     if (estaGirando) return;
+    if (modoEdicion) {
+        mostrarAlerta('Cierra el modo edición (Esc) antes de girar.');
+        return;
+    }
 
     const elementosActivos = obtenerElementosActivos();
     if (elementosActivos.length < 1) {
@@ -260,7 +299,7 @@ function iniciarGiro() {
     }
     if (elementosActivos.length === 1) {
         // Solo uno: se selecciona automáticamente
-        procesarElementoSeleccionado(elementosActivos[0]);
+        procesarElementoSeleccionado(elementosActivos[0], elementosActivos);
         return;
     }
 
@@ -357,6 +396,10 @@ function cerrarModal() {
 // F7 / OCULTAR ÚLTIMO SORTEADO (tecla S)
 // ====================================================
 function ocultarUltimoSorteado() {
+    if (estaGirando) {
+        mostrarAlerta('Espera a que termine el giro.');
+        return;
+    }
     if (ultimoSorteado === -1) {
         mostrarAlerta('Primero realiza un sorteo para ocultar un elemento.');
         return;
@@ -373,6 +416,10 @@ function ocultarUltimoSorteado() {
 }
 
 function resaltarElementoOcultoEnTextarea(indiceElemento) {
+    // En el textarea resaltamos con marcado visual usando un overlay
+    // Como el textarea es texto plano, aplicamos la estrategia de
+    // añadir un sufijo visual en la línea correspondiente (no destructivo)
+    // La alternativa real es cambiar el valor del textarea con marcado
     const lineas = textareaElementos.value.split('\n');
     let contadorElementos = 0;
     const nuevasLineas = lineas.map(linea => {
@@ -380,6 +427,7 @@ function resaltarElementoOcultoEnTextarea(indiceElemento) {
         if (lineaTrimmed.length === 0) return linea;
         if (contadorElementos === indiceElemento) {
             contadorElementos++;
+            // Marcamos visualmente con prefijo gris (si no tiene ya la marca)
             if (!linea.startsWith('  ░ ')) {
                 return '  ░ ' + linea;
             }
@@ -395,6 +443,11 @@ function resaltarElementoOcultoEnTextarea(indiceElemento) {
 // F8 / REINICIAR (tecla R)
 // ====================================================
 function reiniciarRuleta() {
+    if (estaGirando) {
+        mostrarAlerta('Espera a que termine el giro para reiniciar.');
+        return;
+    }
+
     elementosOcultos = new Set();
     ultimoSorteado   = -1;
 
@@ -436,6 +489,7 @@ function agregarAlHistorial(nombre, color) {
     const numero = historialSorteos.length + 1;
     historialSorteos.unshift({ nombre, color, numero });
 
+    // Limpiar mensaje vacío
     const vacio = historialLista.querySelector('.historial-vacio');
     if (vacio) vacio.remove();
 
@@ -456,7 +510,7 @@ function actualizarLeyendaColores() {
     leyendaColores.innerHTML = '';
     const elementosActivos = obtenerElementosActivos();
     if (elementosActivos.length === 0) {
-        leyendaColores.innerHTML = '<span style="color:#bbb;font-size:0.8rem">Sin elementos activos</span>';
+        leyendaColores.innerHTML = '<span style="color:var(--texto-secundario);font-size:0.8rem">Sin elementos activos</span>';
         return;
     }
     elementosActivos.forEach(elemento => {
@@ -494,6 +548,7 @@ function escaparHTML(texto) {
 }
 
 function mostrarAlerta(mensaje) {
+    // Alerta no-intrusiva: brief highlight en el panel de resultado
     const anterior = textoResultado.textContent;
     textoResultado.textContent = '⚠ ' + mensaje;
     setTimeout(() => {
@@ -502,13 +557,13 @@ function mostrarAlerta(mensaje) {
 }
 
 // ====================================================
-// LISTENERS DE TECLADO (Space, S, E, R, F)
+// LISTENERS DE TECLADO (Space, S, E, R, F, T)
 // ====================================================
 document.addEventListener('keydown', function(evento) {
     const tecla = evento.key;
 
-    // Ignorar si se está editando el textarea (excepto Escape)
-    if (modoEdicion && tecla !== 'Escape') return;
+    // Ignorar si se está editando el textarea (excepto Escape y T)
+    if (modoEdicion && tecla !== 'Escape' && tecla !== 't' && tecla !== 'T') return;
 
     switch (tecla) {
         case ' ':
@@ -518,19 +573,28 @@ document.addEventListener('keydown', function(evento) {
             break;
         case 's':
         case 'S':
+            evento.preventDefault();
             ocultarUltimoSorteado();   // F7 - Ocultar último sorteado
             break;
         case 'e':
         case 'E':
+            evento.preventDefault();
             habilitarEdicion();        // F7 - Habilitar edición
             break;
         case 'r':
         case 'R':
+            evento.preventDefault();
             reiniciarRuleta();         // F8 - Reiniciar
             break;
         case 'f':
         case 'F':
+            evento.preventDefault();
             alternarPantallaCompleta(); // F9 - Pantalla completa
+            break;
+        case 't':
+        case 'T':
+            evento.preventDefault();
+            alternarTema();            // Tema oscuro/claro
             break;
         case 'Escape':
             if (modoEdicion) deshabilitarEdicion();
@@ -542,17 +606,20 @@ document.addEventListener('keydown', function(evento) {
 // ====================================================
 // LISTENERS DEL TEXTAREA
 // ====================================================
+// F6 - Actualización automática al escribir
 textareaElementos.addEventListener('input', function() {
     if (!modoEdicion) return;
     actualizarDesdeTextarea();
 });
 
+// Cerrar edición al perder foco
 textareaElementos.addEventListener('blur', function() {
     setTimeout(() => {
         if (modoEdicion) deshabilitarEdicion();
     }, 100);
 });
 
+// F7 - Clic en textarea habilita edición
 textareaElementos.addEventListener('click', function() {
     habilitarEdicion();
 });
@@ -575,6 +642,7 @@ modalResultado.addEventListener('click', function(e) {
 // INICIALIZACIÓN
 // ====================================================
 function inicializarAplicacion() {
+    cargarTemaGuardado();         // Cargar tema oscuro si estaba activo
     recuperarDeStorage();          // F5 - Recuperar desde localStorage
     listaElementos = leerElementosDelTextarea(); // F3
     actualizarContadores();
