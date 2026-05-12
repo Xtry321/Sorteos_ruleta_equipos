@@ -451,7 +451,7 @@ function actualizarLabelCantidad() {
     const inputCantidad = document.getElementById('cantidadValor');
     
     if (tipoSorteo === 'equipos') {
-        labelCantidad.textContent = '📊 Número de equipos:';
+        labelCantidad.textContent = 'Número de equipos:';
         inputCantidad.max = 50;
         inputCantidad.value = Math.min(inputCantidad.value, 50);
     } else {
