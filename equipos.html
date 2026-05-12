@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteo de Equipos - Aula Virtual</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/equipos.css">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Primera Pantalla: Configuración -->
+        <div id="pantallaConfiguracion">
+            <h1>🎯 Sorteo de Equipos</h1>
+            <div class="subtitle">Crea equipos al azar a partir de una lista de participantes</div>
+
+            <!-- Lista de participantes -->
+            <div class="form-group">
+                <label>📝 Lista de Participantes (máx. 100 participantes, 50 caracteres c/u):</label>
+                <textarea id="listaParticipantes" rows="8" placeholder="Ingresa un participante por línea&#10;Ejemplo:&#10;Juan Pérez&#10;María García&#10;Carlos López&#10;Ana Martínez"></textarea>
+                <small>💡 Cada línea es un participante. Máximo 100 participantes y 50 caracteres por nombre.</small>
+            </div>
+
+            <!-- Opciones de sorteo -->
+            <div class="card">
+                <div class="form-group">
+                    <label>🎲 Tipo de Sorteo:</label>
+                    <select id="tipoSorteo">
+                        <option value="equipos">Número de equipos</option>
+                        <option value="participantes">Participantes por equipo</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="labelCantidad">📊 Número de equipos:</label>
+                    <input type="number" id="cantidadValor" min="1" max="50" value="2">
+                </div>
+
+                <div class="form-group">
+                    <label>🏷️ Título para los equipos:</label>
+                    <input type="text" id="tituloEquipos" placeholder="Ej: Equipo, Grupo, Team" value="Equipo">
+                </div>
+            </div>
+
+            <!-- Botón Generar -->
+            <div class="text-center">
+                <button id="btnGenerar">🎲 Generar Equipos</button>
+                <a href="index.html" class="button-secondary" style="display: inline-block; text-decoration: none; margin-left: 10px;">↩️ Volver al Inicio</a>
+            </div>
+        </div>
+
+        <!-- Segunda Pantalla: Resultados -->
+        <div id="pantallaResultados" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>🏆 Resultado del Sorteo</h1>
+                <button id="btnVolverConfiguracion" class="button-secondary">⚙️ Nueva Configuración</button>
+            </div>
+            
+            <div id="resultadosEquipos" class="teams-grid"></div>
+
+            <!-- Botones de acción -->
+            <div class="button-group" style="margin-top: 30px; text-align: center;">
+                <button id="btnDescargarJPG">📸 Descargar como JPG</button>
+                <button id="btnCopiarPortapapeles">📋 Copiar al portapapeles</button>
+                <button id="btnCopiarColumnas">📑 Copiar equipos en columnas</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/equipos.js"></script>
+</body>
+</html>
