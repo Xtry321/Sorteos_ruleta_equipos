@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta Aula Virtual - UNCP</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ruleta.css">
+</head>
+<body>
+    <div class="container" id="contenedorPrincipal">
+
+        <!-- ENCABEZADO -->
+        <header class="encabezado">
+            <div class="encabezado-logo">🎓</div>
+            <div class="encabezado-texto">
+                <h1>Ruleta Aula Virtual</h1>
+                <p class="subtitle">Universidad Nacional del Centro del Perú · Facultad de Ingeniería de Sistemas</p>
+            </div>
+            <a href="index.html" class="btn-volver" title="Volver al inicio">← Inicio</a>
+        </header>
+
+        <!-- ATAJOS DE TECLADO -->
+        <div class="panel-atajos">
+            <span class="atajo"><kbd>Space</kbd> Girar</span>
+            <span class="atajo"><kbd>S</kbd> Ocultar último</span>
+            <span class="atajo"><kbd>E</kbd> Editar lista</span>
+            <span class="atajo"><kbd>R</kbd> Reiniciar</span>
+            <span class="atajo"><kbd>F</kbd> Pantalla completa</span>
+        </div>
+
+        <!-- LAYOUT PRINCIPAL -->
+        <div class="layout-principal">
+
+            <!-- COLUMNA IZQUIERDA: Ruleta -->
+            <section class="columna-ruleta">
+                <div class="ruleta-contenedor" id="contenedorRuleta" title="Haz clic para girar">
+                    <!-- El triángulo indicador (puntero rojo) -->
+                    <div class="puntero-triangulo" id="punteroTriangulo">▼</div>
+                    <!-- Canvas de la ruleta -->
+                    <canvas id="canvasRuleta" width="420" height="420"></canvas>
+                    <!-- Overlay de clic -->
+                    <div class="ruleta-overlay" id="overlayRuleta">
+                        <span class="ruleta-overlay-icono">▶</span>
+                    </div>
+                </div>
+
+                <!-- Botones de control -->
+                <div class="controles-ruleta">
+                    <button id="btnIniciar" class="btn-girar" onclick="iniciarGiro()">
+                        <span class="btn-icono">🎯</span> Iniciar Sorteo
+                    </button>
+                    <button id="btnReiniciar" class="btn-reiniciar button-secondary" onclick="reiniciarRuleta()">
+                        <span class="btn-icono">🔄</span> Reiniciar
+                    </button>
+                    <button id="btnPantallaCompleta" class="btn-pantalla button-info" onclick="alternarPantallaCompleta()">
+                        <span class="btn-icono">⛶</span> Pantalla Completa
+                    </button>
+                </div>
+
+                <!-- Panel de resultado -->
+                <div class="panel-resultado" id="panelResultado">
+                    <div class="resultado-icono">🏆</div>
+                    <div class="resultado-etiqueta">Elemento Seleccionado</div>
+                    <div class="resultado-nombre" id="textoResultado">—</div>
+                </div>
+
+                <!-- Contador de elementos -->
+                <div class="panel-contador">
+                    <div class="contador-item">
+                        <span class="contador-num" id="numTotal">0</span>
+                        <span class="contador-lbl">Total</span>
+                    </div>
+                    <div class="contador-separador">|</div>
+                    <div class="contador-item">
+                        <span class="contador-num contador-activos" id="numActivos">0</span>
+                        <span class="contador-lbl">Activos</span>
+                    </div>
+                    <div class="contador-separador">|</div>
+                    <div class="contador-item">
+                        <span class="contador-num contador-ocultos" id="numOcultos">0</span>
+                        <span class="contador-lbl">Ocultos</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COLUMNA DERECHA: Lista de elementos -->
+            <section class="columna-lista">
+                <div class="card">
+                    <h2>📋 Lista de Participantes</h2>
+                    <p class="instruccion-textarea">
+                        Un elemento por línea. Haz clic en el área o presiona <kbd>E</kbd> para editar.
+                    </p>
+
+                    <div class="form-group">
+                        <div class="textarea-wrapper" id="wrapperTextarea">
+                            <textarea
+                                id="textareaElementos"
+                                rows="16"
+                                placeholder="Ingresa un nombre por línea:&#10;Juan Pérez&#10;María García&#10;Carlos López&#10;..."
+                                readonly
+                                onclick="habilitarEdicion()"
+                            ></textarea>
+                            <div class="textarea-estado" id="estadoTextarea">
+                                <span id="iconoEstado">🔒</span>
+                                <span id="textoEstado">Solo lectura — presiona E o clic para editar</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="botones-lista">
+                        <button onclick="habilitarEdicion()" class="button-info" title="Tecla E">
+                            ✏️ Editar
+                        </button>
+                        <button onclick="ocultarUltimoSorteado()" class="button-secondary" title="Tecla S">
+                            👁️ Ocultar último (S)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Leyenda de colores -->
+                <div class="card card-leyenda">
+                    <h2>🎨 Colores de la Ruleta</h2>
+                    <div class="leyenda-colores" id="leyendaColores">
+                        <!-- Se genera dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Historial de sorteos -->
+                <div class="card card-historial">
+                    <h2>📜 Historial de Sorteos</h2>
+                    <div class="historial-lista" id="historialLista">
+                        <p class="historial-vacio">Aún no se ha realizado ningún sorteo.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal de resultado animado -->
+    <div class="modal-resultado" id="modalResultado">
+        <div class="modal-contenido" id="modalContenido">
+            <div class="modal-confeti" id="modalConfeti">🎉</div>
+            <div class="modal-titulo">¡Elemento Seleccionado!</div>
+            <div class="modal-nombre" id="modalNombre"></div>
+            <button class="modal-cerrar" onclick="cerrarModal()">Continuar →</button>
+        </div>
+    </div>
+
+    <script src="js/ruleta.js"></script>
+</body>
+</html>
